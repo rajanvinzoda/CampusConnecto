@@ -1,12 +1,18 @@
 package com.example.ui.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,12 +22,53 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.UserRole
+
+@Composable
+fun TactileCard(
+    onClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(16.dp),
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    elevation: Dp = 2.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(
+            stiffness = Spring.StiffnessMediumLow,
+            dampingRatio = Spring.DampingRatioMediumBouncy
+        ),
+        label = "tactile_scale"
+    )
+
+    Card(
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else Modifier
+            )
+    ) {
+        Column(content = content)
+    }
+}
 
 @Composable
 fun RoleBadge(
@@ -29,10 +76,10 @@ fun RoleBadge(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        color = Color(role.badgeColor).copy(alpha = 0.15f),
+        color = Color(role.badgeColor).copy(alpha = 0.12f),
         contentColor = Color(role.badgeColor),
         shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(role.badgeColor).copy(alpha = 0.4f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(role.badgeColor).copy(alpha = 0.35f)),
         modifier = modifier.testTag("role_badge_${role.name.lowercase()}")
     ) {
         Row(
@@ -68,6 +115,7 @@ fun RoleBadge(
 fun CampusTopBar(
     currentRole: UserRole,
     onSearchClick: () -> Unit,
+    onCommandPaletteClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     unreadNotificationsCount: Int,
     onAdminDashboardClick: () -> Unit,
@@ -75,7 +123,7 @@ fun CampusTopBar(
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 3.dp,
+        tonalElevation = 2.dp,
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -131,6 +179,17 @@ fun CampusTopBar(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onCommandPaletteClick,
+                    modifier = Modifier.testTag("command_palette_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Terminal,
+                        contentDescription = "Raycast Command Palette",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
                 if (currentRole == UserRole.UNIVERSITY_ADMIN || currentRole == UserRole.DEPARTMENT_ADMIN) {
                     IconButton(
                         onClick = onAdminDashboardClick,
@@ -179,6 +238,115 @@ fun CampusTopBar(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CommandPaletteModal(
+    onSelectTab: (NavigationTab) -> Unit,
+    onOpenAdmin: (() -> Unit)?,
+    onDismiss: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+
+    val commands = remember(searchQuery) {
+        listOf(
+            Triple("Feed & Academic Smart Stream", "Jump to main campus social feed", NavigationTab.FEED),
+            Triple("Encrypted Chat & Community Channels", "Direct messages & group channels", NavigationTab.CHAT),
+            Triple("University Forums & Academic Q&A", "Browse discussions & solved answers", NavigationTab.FORUM),
+            Triple("Campus Event Calendar", "Inspect month grid & QR attendance badges", NavigationTab.EVENTS),
+            Triple("Career & Placement Drive", "1-click application & Alumni referrals", NavigationTab.CAREER),
+            Triple("Gemini AI Academic Tutor", "Generate flashcards, quizzes & explanations", NavigationTab.AI_STUDY),
+            Triple("Academic Resource Hub", "Download & upload lecture materials / papers", NavigationTab.RESOURCES),
+            Triple("User Profile & Session Security", "Edit profile, skills, & active sessions", NavigationTab.PROFILE)
+        ).filter {
+            searchQuery.isBlank() || it.first.contains(searchQuery, ignoreCase = true) || it.second.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Terminal, contentDescription = "Command Palette", tint = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Raycast Command Palette (⌘K)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().heightIn(max = 380.dp)) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Type to search actions, jump to tab...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(commands) { cmd ->
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onSelectTab(cmd.third)
+                                    onDismiss()
+                                }
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.padding(12.dp)
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(cmd.first, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text(cmd.second, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = "Jump", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
+                            }
+                        }
+                    }
+
+                    if (onOpenAdmin != null) {
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onOpenAdmin()
+                                        onDismiss()
+                                    }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.padding(12.dp)
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("Open University Admin Console", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.error)
+                                        Text("User roles, backend sync, telemetry", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Icon(Icons.Default.AdminPanelSettings, contentDescription = "Admin", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close (Esc)")
+            }
+        }
+    )
+}
+
 enum class NavigationTab(val label: String, val icon: ImageVector, val tag: String) {
     FEED("Feed", Icons.Default.DynamicFeed, "tab_feed"),
     CHAT("Chat", Icons.AutoMirrored.Filled.Chat, "tab_chat"),
@@ -200,6 +368,7 @@ fun CampusBottomNav(
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 8.dp,
         shadowElevation = 8.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)),
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()

@@ -15,6 +15,7 @@ import com.example.data.repository.CampusRepository
 import com.example.data.repository.GeminiRepository
 import com.example.ui.components.CampusBottomNav
 import com.example.ui.components.CampusTopBar
+import com.example.ui.components.CommandPaletteModal
 import com.example.ui.components.NavigationTab
 import com.example.ui.screens.*
 import com.example.ui.theme.CampusConnectTheme
@@ -51,6 +52,7 @@ fun MainAppScreen(
     var showSearchOverlay by remember { mutableStateOf(false) }
     var showNotificationsOverlay by remember { mutableStateOf(false) }
     var showAdminOverlay by remember { mutableStateOf(false) }
+    var showCommandPalette by remember { mutableStateOf(false) }
 
     // Collect repository state flows
     val currentUser by campusRepository.currentUser.collectAsState()
@@ -72,6 +74,7 @@ fun MainAppScreen(
                 CampusTopBar(
                     currentRole = currentUser.role,
                     onSearchClick = { showSearchOverlay = true },
+                    onCommandPaletteClick = { showCommandPalette = true },
                     onNotificationsClick = { showNotificationsOverlay = true },
                     unreadNotificationsCount = notifications.size,
                     onAdminDashboardClick = { showAdminOverlay = true }
@@ -137,6 +140,15 @@ fun MainAppScreen(
                     )
                 }
                 else -> {
+                    if (showCommandPalette) {
+                        CommandPaletteModal(
+                            onSelectTab = { tab: NavigationTab -> activeTab = tab },
+                            onOpenAdmin = if (currentUser.role == UserRole.UNIVERSITY_ADMIN || currentUser.role == UserRole.DEPARTMENT_ADMIN) {
+                                { showAdminOverlay = true }
+                            } else null,
+                            onDismiss = { showCommandPalette = false }
+                        )
+                    }
                     when (activeTab) {
                         NavigationTab.FEED -> {
                             FeedScreen(
