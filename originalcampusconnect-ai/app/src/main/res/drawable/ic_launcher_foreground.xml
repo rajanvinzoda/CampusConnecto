@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Graduation Cap -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,32L24,46L54,60L84,46L54,32Z" />
+    <path
+        android:fillColor="#E0E7FF"
+        android:pathData="M34,54.5V67.5C34,73.5 43,78 54,78C65,78 74,73.5 74,67.5V54.5L54,63.5L34,54.5Z" />
+    <!-- AI Sparkle / Node -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M80,30C80,30 82,34 86,36C82,38 80,42 80,42C80,42 78,38 74,36C78,34 80,30 80,30Z" />
+    <path
+        android:fillColor="#818CF8"
+        android:pathData="M28,68C28,68 29.5,71 32.5,72.5C29.5,74 28,77 28,77C28,77 26.5,74 23.5,72.5C26.5,71 28,68 28,68Z" />
+</vector>

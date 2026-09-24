@@ -1,0 +1,6 @@
+{
+  "name": "CampusConnect AI",
+  "description": "Exclusive AI-powered university social networking ecosystem with Feed, Real-time Chat, Forums, Events, Career Center, Resource Hub, and AI Study Assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
