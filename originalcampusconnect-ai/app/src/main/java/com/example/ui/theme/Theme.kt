@@ -23,13 +23,14 @@ private val DarkColorScheme = darkColorScheme(
     surface = DarkSurface,
     onSurface = DarkOnSurface,
     surfaceVariant = DarkSurfaceVariant,
-    onSurfaceVariant = Color(0xFF94A3B8)
+    onSurfaceVariant = Color(0xFF94A3B8),
+    outline = DarkBorder
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Indigo600,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFE0E7FF),
+    primaryContainer = Color(0xFFEEF2FF),
     onPrimaryContainer = Indigo600,
     secondary = Cyan500,
     tertiary = Violet600,
@@ -38,12 +39,13 @@ private val LightColorScheme = lightColorScheme(
     surface = LightSurface,
     onSurface = LightOnSurface,
     surfaceVariant = LightSurfaceVariant,
-    onSurfaceVariant = Color(0xFF64748B)
+    onSurfaceVariant = LightOnSurfaceVariant,
+    outline = LightBorder
 )
 
 @Composable
 fun CampusConnectTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false, // Force light-first premium theme
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -62,4 +64,3 @@ fun CampusConnectTheme(
         content = content
     )
 }
-

@@ -44,6 +44,8 @@ fun GlobalSearchScreen(
         else events.filter { it.title.contains(query, ignoreCase = true) || it.category.contains(query, ignoreCase = true) }
     }
 
+    val totalMatches = matchedPosts.size + matchedResources.size + matchedEvents.size
+
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onClose) {
@@ -53,6 +55,7 @@ fun GlobalSearchScreen(
                 value = query,
                 onValueChange = { query = it },
                 placeholder = { Text("Search Students, Faculty, Posts, Resources, Events...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
                 modifier = Modifier
                     .weight(1f)
@@ -64,7 +67,20 @@ fun GlobalSearchScreen(
 
         if (query.isBlank()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Type to search across CampusConnect AI", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(48.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Type to search across CampusConnect AI", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        } else if (totalMatches == 0) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.SearchOff, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(48.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("No results found for '$query'", fontWeight = FontWeight.Bold)
+                    Text("Try searching for different keywords or categories.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
